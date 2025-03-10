@@ -7,7 +7,6 @@ FindHome is a MERN (MongoDB, Express.js, React.js, Node.js) stack project design
 - **User Authentication**: Sign up, login, and manage accounts.
 - **Property Listings**: Property owners can add, edit, and delete home listings.
 - **Image Uploads**: Supports multiple image uploads for properties.
-- **Search & Filter**: Users can search properties based on location, price, type, and more.
 - **Ratings & Reviews**: Users can rate and review properties.
 - **Booking System**: Availability and booking functionality.
 - **Map Integration**: Displays property locations using coordinates.
@@ -23,7 +22,6 @@ FindHome is a MERN (MongoDB, Express.js, React.js, Node.js) stack project design
 
 ### User (Renter)
 
-- Can browse and search for properties.
 - Can book available properties.
 - Can rate and review properties.
 - Can contact property owners for inquiries.
