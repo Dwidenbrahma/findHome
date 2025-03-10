@@ -31,7 +31,7 @@ const homeSchema = new mongoose.Schema(
     reviews: [
       {
         user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-        rating: { type: Number, required: true },
+        // rating: { type: Number, required: true },
         comment: { type: String },
         date: { type: Date, default: Date.now },
       },

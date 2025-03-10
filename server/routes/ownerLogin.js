@@ -2,7 +2,7 @@ const express = require("express");
 const jwtOwner = require("jsonwebtoken");
 const OwnerLogin = express.Router();
 const Owner = require("../models/owner");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 require("dotenv").config();
 
 OwnerLogin.post("/owner/login", async (req, res) => {

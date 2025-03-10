@@ -6,16 +6,14 @@ const homeBooking = express.Router();
 
 homeBooking.post("/reserve/:id", async (req, res) => {
   const { startDate, endDate } = req.body;
-  const houseId = req.params.id; // House ID from the route parameter
+  const houseId = req.params.id;
 
-  // Check if all required fields are provided
   if (!startDate || !endDate) {
     return res
       .status(400)
       .json({ error: "Start date and end date are required" });
   }
 
-  // Get the token from the authorization header
   const token = req.headers.authorization?.split(" ")[1];
   if (!token) {
     return res.status(401).json({ error: "Unauthorized" });

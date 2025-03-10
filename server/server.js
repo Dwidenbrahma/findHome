@@ -13,6 +13,7 @@ const ownerRegistration = require("./routes/ownerRegistration");
 const homeBooking = require("./routes/homeBooking");
 const ownerDash = require("./routes/ownerDash");
 const OwnerLogin = require("./routes/ownerLogin");
+const review = require("./routes/review");
 
 const app = express();
 
@@ -41,6 +42,7 @@ app.use("/", ownerRegistration);
 app.use("/", homeBooking);
 app.use("/", ownerDash);
 app.use("/", OwnerLogin);
+app.use("/", review);
 
 //home route
 
