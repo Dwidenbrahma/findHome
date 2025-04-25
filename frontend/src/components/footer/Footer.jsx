@@ -25,7 +25,7 @@ const Footer = () => {
             </Link>
           </li>
           <li>
-            <Link to="/list-property" className="hover:text-gray-400">
+            <Link to="/owner/dash" className="hover:text-gray-400">
               List Property
             </Link>
           </li>

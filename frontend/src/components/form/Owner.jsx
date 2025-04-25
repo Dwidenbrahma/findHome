@@ -18,7 +18,7 @@ const Owner = () => {
     fName: "",
     email: "",
     password: "",
-    profileImage: "", // Will hold the file object
+    profileImage: "",
     phone: "",
   });
 
@@ -86,6 +86,7 @@ const Owner = () => {
       });
 
       setResponseMessage("Profile created successfully!");
+      window.location.href = "/owner/dash";
       console.log("Response:", response.data);
     } catch (error) {
       setResponseMessage("Error creating profile.");

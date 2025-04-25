@@ -1,6 +1,10 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { OwnerAuthContext } from "../OwnerContextAuth";
+import ManageProperty from "./MangeProperty";
+import FeedbackSection from "./FeedbackSection";
+import ManageCustomers from "./ManageCustomers";
+
 import axios from "axios";
 import url from "../../url";
 import {
@@ -11,6 +15,7 @@ import {
   FaUsers,
   FaSignOutAlt,
   FaCommentAlt,
+  FaList,
 } from "react-icons/fa";
 import { MdManageAccounts } from "react-icons/md";
 
@@ -18,6 +23,7 @@ const OwnerDashboard = () => {
   const { ownerToken, loading } = useContext(OwnerAuthContext);
   const [ownerData, setOwnerData] = useState("");
   const [activeMenu, setActiveMenu] = useState("dashboard");
+  const [property, setProperties] = useState(0);
 
   // fetch Data
   useEffect(() => {
@@ -29,7 +35,8 @@ const OwnerDashboard = () => {
           },
         });
 
-        setOwnerData(response.data);
+        setOwnerData(response.data.admin);
+        setProperties(response.data.totalProperties);
       } catch (error) {
         setOwnerData("Error: " + error.message);
       }
@@ -47,6 +54,11 @@ const OwnerDashboard = () => {
       </div>
     );
   }
+
+  const handleLogout = () => {
+    localStorage.removeItem("ownerToken");
+    window.location.href = "/owner/login";
+  };
 
   if (!ownerToken) return <Navigate to="/owner/login" replace />;
 
@@ -66,20 +78,72 @@ const OwnerDashboard = () => {
       id: "post",
       label: "Post Property",
       icon: <FaHome className="mr-3" />,
-      link: "/Owner/dash/posthome",
     },
     {
       id: "feedback",
       label: "Feedback",
       icon: <FaCommentAlt className="mr-3" />,
     },
-    { id: "edit", label: "Edit Property", icon: <FaEdit className="mr-3" /> },
+
     {
       id: "customers",
       label: "Manage Customers",
       icon: <FaUsers className="mr-3" />,
     },
   ];
+
+  const renderContent = () => {
+    switch (activeMenu) {
+      case "manage":
+        return <ManageProperty />;
+      case "post":
+        return <Navigate to="/owner/dash/posthome" replace />;
+      case "feedback":
+        return <FeedbackSection />;
+      case "customers":
+        return <ManageCustomers />;
+
+      default:
+        return (
+          <div className="text-center">
+            <div className="flex items-center justify-center">
+              <img
+                src="/api/placeholder/400/300"
+                alt="development"
+                className="w-64 h-64 object-contain opacity-25"
+              />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-400 mt-6">
+              Feature is in Development...
+            </h1>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
+              <div className="bg-indigo-50 p-6 rounded-xl border border-indigo-100">
+                <h3 className="text-lg font-semibold text-indigo-700 mb-2">
+                  Properties
+                </h3>
+                <p className="text-3xl font-bold">{property || 0}</p>
+              </div>
+              <div className="bg-green-50 p-6 rounded-xl border border-green-100">
+                <h3 className="text-lg font-semibold text-green-700 mb-2">
+                  Active Bookings
+                </h3>
+                <p className="text-3xl font-bold">
+                  {ownerData?.activeBookings || 0}
+                </p>
+              </div>
+              <div className="bg-purple-50 p-6 rounded-xl border border-purple-100">
+                <h3 className="text-lg font-semibold text-purple-700 mb-2">
+                  Revenue
+                </h3>
+                <p className="text-3xl font-bold">
+                  ₹{ownerData?.revenue?.toLocaleString() || "0"}
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -109,7 +173,7 @@ const OwnerDashboard = () => {
               <img
                 src={
                   ownerData?.profileImage
-                    ? `${url}/${ownerData.profileImage}`
+                    ? `${url}${ownerData.profileImage}`
                     : `https://ui-avatars.com/api/?name=${encodeURIComponent(
                         ownerData?.name || "Owner"
                       )}&background=6366f1&color=fff`
@@ -130,36 +194,23 @@ const OwnerDashboard = () => {
             <ul className="space-y-2">
               {menuItems.map((item) => (
                 <li key={item.id}>
-                  {item.link ? (
-                    <Link
-                      to={item.link}
-                      className={`flex items-center px-4 py-3 rounded-lg transition-colors ${
-                        activeMenu === item.id
-                          ? "bg-indigo-50 text-indigo-700"
-                          : "text-gray-600 hover:bg-gray-50 hover:text-indigo-600"
-                      }`}
-                      onClick={() => setActiveMenu(item.id)}>
-                      {item.icon}
-                      {item.label}
-                    </Link>
-                  ) : (
-                    <button
-                      className={`w-full flex items-center px-4 py-3 rounded-lg transition-colors ${
-                        activeMenu === item.id
-                          ? "bg-indigo-50 text-indigo-700"
-                          : "text-gray-600 hover:bg-gray-50 hover:text-indigo-600"
-                      }`}
-                      onClick={() => setActiveMenu(item.id)}>
-                      {item.icon}
-                      {item.label}
-                    </button>
-                  )}
+                  <button
+                    onClick={() => setActiveMenu(item.id)}
+                    className={`w-full flex items-center px-4 py-3 rounded-lg transition-colors ${
+                      activeMenu === item.id
+                        ? "bg-indigo-50 text-indigo-700"
+                        : "text-gray-600 hover:bg-gray-50 hover:text-indigo-600"
+                    }`}>
+                    {item.icon}
+                    {item.label}
+                  </button>
                 </li>
               ))}
-            </ul>
-
+            </ul>{" "}
             <div className="mt-6 pt-6 border-t border-gray-100">
-              <button className="w-full flex items-center px-4 py-3 text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center px-4 py-3 text-red-500 hover:bg-red-50 rounded-lg transition-colors">
                 <FaSignOutAlt className="mr-3" />
                 Logout
               </button>
@@ -167,61 +218,8 @@ const OwnerDashboard = () => {
           </nav>
         </aside>
 
-        {/* Main Content Area */}
         <div className="flex-grow bg-white rounded-xl shadow-md p-6">
-          {activeMenu === "dashboard" && (
-            <div className="text-center">
-              <div className="flex items-center justify-center">
-                <img
-                  src="/api/placeholder/400/300"
-                  alt="development"
-                  className="w-64 h-64 object-contain opacity-25"
-                />
-              </div>
-              <h1 className="text-2xl font-bold text-gray-400 mt-6">
-                Feature is in Development...
-              </h1>
-              <p className="text-gray-500 mt-2">
-                This section is currently being built. Please check back later.
-              </p>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
-                <div className="bg-indigo-50 p-6 rounded-xl border border-indigo-100">
-                  <h3 className="text-lg font-semibold text-indigo-700 mb-2">
-                    Properties
-                  </h3>
-                  <p className="text-3xl font-bold">
-                    {ownerData?.propertyCount || 0}
-                  </p>
-                </div>
-                <div className="bg-green-50 p-6 rounded-xl border border-green-100">
-                  <h3 className="text-lg font-semibold text-green-700 mb-2">
-                    Active Bookings
-                  </h3>
-                  <p className="text-3xl font-bold">
-                    {ownerData?.activeBookings || 0}
-                  </p>
-                </div>
-                <div className="bg-purple-50 p-6 rounded-xl border border-purple-100">
-                  <h3 className="text-lg font-semibold text-purple-700 mb-2">
-                    Revenue
-                  </h3>
-                  <p className="text-3xl font-bold">
-                    ₹{ownerData?.revenue?.toLocaleString() || "0"}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeMenu !== "dashboard" && (
-            <div className="flex flex-col items-center justify-center h-full">
-              <h2 className="text-2xl font-bold text-gray-400 mb-4">
-                {menuItems.find((item) => item.id === activeMenu)?.label}
-              </h2>
-              <p className="text-gray-500">This feature is coming soon...</p>
-            </div>
-          )}
+          {renderContent()}
         </div>
       </main>
 

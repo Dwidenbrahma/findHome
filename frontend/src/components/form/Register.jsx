@@ -54,6 +54,7 @@ const Register = () => {
       });
 
       setResponseMessage("Profile created successfully!");
+      window.location.href = "/user/dashbord";
       console.log("Response:", response.data);
     } catch (error) {
       setResponseMessage("Error creating profile.");

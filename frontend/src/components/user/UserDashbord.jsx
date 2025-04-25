@@ -36,8 +36,14 @@ const Review = ({ onSubmit, onClose, houseId, userId }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Blurred backdrop */}
+      <div
+        className="absolute inset-0 bg-black/30 backdrop-blur-md"
+        onClick={onClose}></div>
+
+      {/* Modal content */}
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6 relative z-10">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-xl font-semibold">Write a Review</h3>
           <button
@@ -50,6 +56,7 @@ const Review = ({ onSubmit, onClose, houseId, userId }) => {
         <textarea
           className="w-full border border-gray-300 rounded p-3 h-40 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
           value={reviewText}
+          placeholder="Share your experience about this property..."
           onChange={(e) => setReviewText(e.target.value)}></textarea>
         <button
           className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300"
@@ -68,29 +75,25 @@ const UserDashbord = () => {
   const [bookingData, setBookingData] = useState([]);
   const [error, setError] = useState(null);
 
+  const fetchDashboardData = async () => {
+    const tokens = localStorage.getItem("token") || token;
+    try {
+      const response = await axios.get(`${url}user/dashboard`, {
+        headers: {
+          Authorization: `Bearer ${tokens}`,
+        },
+      });
+
+      setUserData(response.data.user);
+      setBookingData(response.data.bookings);
+      setReviewVisibility(new Array(response.data.bookings.length).fill(false));
+    } catch (err) {
+      setError(err.response?.data?.message || "Error fetching dashboard data");
+    }
+  };
+
   useEffect(() => {
-    const fetchDashbordData = async () => {
-      const tokens = localStorage.getItem("token") || token;
-      try {
-        const response = await axios.get(`${url}user/dashboard`, {
-          headers: {
-            Authorization: `Bearer ${tokens}`,
-          },
-        });
-
-        setUserData(response.data.user);
-        setBookingData(response.data.bookings);
-        setReviewVisibility(
-          new Array(response.data.bookings.length).fill(false)
-        );
-      } catch (err) {
-        setError(
-          err.response?.data?.message || "Error fetching dashboard data"
-        );
-      }
-    };
-
-    if (token) fetchDashbordData();
+    if (token) fetchDashboardData();
   }, [token]);
 
   if (loading) {
@@ -110,6 +113,7 @@ const UserDashbord = () => {
 
   const handleReviewSubmit = (reviewText) => {
     console.log("Review submitted:", reviewText);
+    handleClose(); // Close the review modal after submission
   };
 
   const handleClose = () => {
@@ -120,12 +124,44 @@ const UserDashbord = () => {
     });
   };
 
-  const toggleReviewVisibility = (index) => {
+  const toggleReviewVisibility = (index, booking) => {
+    // Check if checkout is done (current date is after end date)
+    const currentDate = new Date();
+    const endDate = new Date(booking.endDate);
+
+    if (currentDate < endDate) {
+      alert("You can only write a review after your stay has ended.");
+      return;
+    }
+
     setReviewVisibility((prevVisibility) => {
       const newVisibility = [...prevVisibility];
       newVisibility[index] = !newVisibility[index];
       return newVisibility;
     });
+  };
+
+  // Helper function to check if checkout is done
+  const isCheckoutDone = (booking) => {
+    const currentDate = new Date();
+    const endDate = new Date(booking.endDate);
+    return currentDate >= endDate;
+  };
+
+  const handleCancel = async (id) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to cancel the Booking"
+    );
+    if (!confirmed) return;
+    try {
+      const response = await axios.delete(`${url}cancel/booking/${id}`);
+
+      if (response.status === 200) {
+        await fetchDashboardData(); // re-fetch updated data
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   return (
@@ -185,9 +221,14 @@ const UserDashbord = () => {
                     <h2 className="text-xl font-bold text-gray-800 mb-2">
                       {booking.house?.title || "House Title"}
                     </h2>
-                    <span className="text-sm text-gray-500 block mb-2">
-                      {new Date(booking.startDate).toLocaleDateString()}
-                    </span>
+                    <div className="flex flex-wrap gap-4 mb-2">
+                      <span className="text-sm text-gray-500 block">
+                        From: {new Date(booking.startDate).toLocaleDateString()}
+                      </span>
+                      <span className="text-sm text-gray-500 block">
+                        To: {new Date(booking.endDate).toLocaleDateString()}
+                      </span>
+                    </div>
                     <p className="mb-4">
                       Total{" "}
                       <span className="font-bold text-blue-600">
@@ -198,12 +239,18 @@ const UserDashbord = () => {
                       </span>
                     </p>
                     <div className="flex flex-wrap gap-2">
-                      <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300">
-                        Download Invoice
-                      </button>
                       <button
-                        onClick={() => toggleReviewVisibility(index)}
-                        className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition duration-300">
+                        onClick={() => toggleReviewVisibility(index, booking)}
+                        className={`${
+                          isCheckoutDone(booking)
+                            ? "bg-green-600 hover:bg-green-700"
+                            : "bg-gray-400 cursor-not-allowed"
+                        } text-white font-bold py-2 px-4 rounded transition duration-300`}
+                        title={
+                          isCheckoutDone(booking)
+                            ? "Write a review"
+                            : "You can write a review after your stay"
+                        }>
                         {reviewVisibility[index]
                           ? "Cancel Review"
                           : "Write Review"}
@@ -213,8 +260,22 @@ const UserDashbord = () => {
                         className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded transition duration-300 inline-block">
                         Book Again
                       </Link>
+
+                      <button
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300 cursor-pointer"
+                        onClick={() => handleCancel(booking._id)}>
+                        Cancel Booking
+                      </button>
                     </div>
+
+                    {!isCheckoutDone(booking) && (
+                      <p className="text-sm text-orange-500 mt-2">
+                        *You can write a review after your stay ends on{" "}
+                        {new Date(booking.endDate).toLocaleDateString()}
+                      </p>
+                    )}
                   </div>
+
                   {reviewVisibility[index] && (
                     <Review
                       onSubmit={handleReviewSubmit}

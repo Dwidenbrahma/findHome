@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import url from "../../url";
 
 const ImgGallery = ({ src }) => {
   const [index, setIndex] = useState(0);
@@ -28,7 +29,7 @@ const ImgGallery = ({ src }) => {
         <img
           className="w-full h-full object-cover transition-opacity duration-500 rounded-xl"
           key={src[index]}
-          src={`http://localhost:4000/${src[index]}`}
+          src={`${url}${src[index]}`}
           alt={`findhome ${index + 1}`}
         />
       </div>

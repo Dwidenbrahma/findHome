@@ -2,8 +2,9 @@ import Footer from "../footer/Footer.jsx";
 import Header from "../header/Header.jsx";
 import { Link } from "react-router-dom";
 import ImgGallery from "./ImgGallery";
-import { FaBed, FaWifi, FaCity } from "react-icons/fa6";
-import { FaCoffee, FaStar, FaShieldAlt } from "react-icons/fa";
+import PanoramicViewer from "./Panoramic.jsx";
+// import { FaBed, FaWifi, FaCity } from "react-icons/fa6";
+// import { FaCoffee, FaStar, FaShieldAlt } from "react-icons/fa";
 import {
   FaSubway,
   FaBus,
@@ -16,38 +17,37 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 import url from "../../url.jsx";
 
+import {
+  FaWifi,
+  FaParking,
+  FaSwimmingPool,
+  FaUtensils,
+  FaTv,
+  FaStar,
+  FaQuestionCircle,
+  FaCity,
+  FaBed,
+} from "react-icons/fa";
+import { MdPets } from "react-icons/md";
+const DefaultIcon = FaQuestionCircle;
+const amenityIcons = {
+  wifi: FaWifi,
+  parking: FaParking,
+  pool: FaSwimmingPool,
+  breakfast: FaUtensils,
+  tv: FaTv,
+  pets: MdPets,
+  // Add more as needed
+};
+
 const Info = () => {
   // All the existing code for states and functions remains the same
   const [homeData, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview"); // For transport tabs
-  const { id } = useParams();
+  const { id, type } = useParams();
 
   // Dummy crime data based on location
-  const getDummyCrimeData = (location) => {
-    // Generate different crime stats based on location name (for demo purposes)
-    const hash = location
-      .split("")
-      .reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    const overall = 15 + (hash % 70); // Range: 15-85
-
-    return {
-      overall: overall,
-      theft: Math.max(10, overall - 10 + (hash % 20)),
-      violent: Math.max(5, overall - 20 + (hash % 15)),
-      safetyNotes: `${location} has a ${
-        overall < 30 ? "low" : overall < 60 ? "moderate" : "high"
-      } crime rate compared to other areas in the region. ${
-        overall < 40
-          ? "The area is generally considered safe for residents and visitors."
-          : overall < 70
-          ? "Exercise normal precautions, especially at night."
-          : "Extra vigilance is recommended, particularly after dark."
-      }`,
-      // No actual heatmap URL, we'll use the fallback grid visualization
-      heatmapUrl: null,
-    };
-  };
 
   // Get dummy transportation data based on location
   const getDummyTransportData = (location) => {
@@ -124,24 +124,6 @@ const Info = () => {
     fetchHomes();
   }, [id]);
 
-  // Function to get color based on crime rate
-  const getCrimeColor = (value) => {
-    // Lower value is safer (less crime)
-    if (value < 20) return "bg-green-100 text-green-800";
-    if (value < 40) return "bg-blue-100 text-blue-800";
-    if (value < 60) return "bg-yellow-100 text-yellow-800";
-    if (value < 80) return "bg-orange-100 text-orange-800";
-    return "bg-red-100 text-red-800";
-  };
-
-  const getCrimeLevel = (value) => {
-    if (value < 20) return "Very Low";
-    if (value < 40) return "Low";
-    if (value < 60) return "Moderate";
-    if (value < 80) return "High";
-    return "Very High";
-  };
-
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -167,7 +149,6 @@ const Info = () => {
   }
 
   // Get dummy crime data for the location
-  const crimeData = getDummyCrimeData(homeData.location || "Default Location");
 
   // Get dummy transport data for the location
   const transportData = getDummyTransportData(
@@ -191,11 +172,25 @@ const Info = () => {
             <h1 className="text-2xl font-bold text-gray-800">
               {homeData.title}
             </h1>
-            <Link to={`/reserve/${id}`}>
+
+            <Link to={`/user/panoramic/${id}`}>
               <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-lg font-medium transition-all duration-300 transform hover:scale-105 shadow-md">
-                Book Now
+                Panoramic view of rooms
               </button>
             </Link>
+            {["hotel", "buy", "rent"].includes(type.toLowerCase()) ? (
+              <Link to={`/reserve/${id}`}>
+                <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-lg font-medium transition-all duration-300 transform hover:scale-105 shadow-md">
+                  Book Now
+                </button>
+              </Link>
+            ) : (
+              <Link to={`/reserve/property/${id}`}>
+                <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-lg font-medium transition-all duration-300 transform hover:scale-105 shadow-md">
+                  Book Now
+                </button>
+              </Link>
+            )}
           </div>
 
           {/* Location & Capacity Info */}
@@ -228,166 +223,7 @@ const Info = () => {
             </div>
           </div>
 
-          {/* Crime Rate Section */}
-          <div className="mb-8">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-              <FaShieldAlt className="mr-2 text-indigo-600" />
-              Neighborhood Safety
-            </h2>
-
-            <div className="bg-gray-50 p-6 rounded-lg">
-              <div className="flex flex-col md:flex-row gap-6">
-                {/* Crime Summary */}
-                <div className="flex-1">
-                  <h3 className="text-lg font-medium text-gray-800 mb-3">
-                    Safety Overview
-                  </h3>
-                  <div className="space-y-4">
-                    <div>
-                      <div className="flex justify-between mb-1">
-                        <span className="text-gray-700">
-                          Overall Crime Rate
-                        </span>
-                        <span
-                          className={`px-2 py-0.5 rounded-full text-xs font-medium ${getCrimeColor(
-                            crimeData.overall
-                          )}`}>
-                          {getCrimeLevel(crimeData.overall)}
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-indigo-600 h-2 rounded-full"
-                          style={{ width: `${crimeData.overall}%` }}></div>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <div className="flex justify-between mb-1">
-                          <span className="text-sm text-gray-600">Theft</span>
-                          <span
-                            className={`px-2 py-0.5 rounded-full text-xs font-medium ${getCrimeColor(
-                              crimeData.theft || 0
-                            )}`}>
-                            {getCrimeLevel(crimeData.theft || 0)}
-                          </span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div
-                            className="bg-blue-500 h-2 rounded-full"
-                            style={{ width: `${crimeData.theft || 0}%` }}></div>
-                        </div>
-                      </div>
-
-                      <div>
-                        <div className="flex justify-between mb-1">
-                          <span className="text-sm text-gray-600">
-                            Violent Crime
-                          </span>
-                          <span
-                            className={`px-2 py-0.5 rounded-full text-xs font-medium ${getCrimeColor(
-                              crimeData.violent || 0
-                            )}`}>
-                            {getCrimeLevel(crimeData.violent || 0)}
-                          </span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div
-                            className="bg-red-500 h-2 rounded-full"
-                            style={{
-                              width: `${crimeData.violent || 0}%`,
-                            }}></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <p className="mt-4 text-sm text-gray-600">
-                    {crimeData.safetyNotes ||
-                      "This area has varying levels of safety. Please review the crime statistics to make an informed decision."}
-                  </p>
-                </div>
-
-                {/* Crime Heatmap */}
-                <div className="flex-1 md:border-l md:pl-6 border-gray-200">
-                  <h3 className="text-lg font-medium text-gray-800 mb-3">
-                    Area Crime Heatmap
-                  </h3>
-                  <div className="w-full h-48 bg-gray-100 rounded-lg border border-gray-200 flex flex-col items-center justify-center">
-                    <div className="grid grid-cols-5 grid-rows-5 gap-1 w-full max-w-xs">
-                      {Array.from({ length: 25 }).map((_, i) => {
-                        // Generate a pattern based on distance from center and adding some randomness
-                        const row = Math.floor(i / 5);
-                        const col = i % 5;
-
-                        // Create hotspots based on the location hash
-                        const locationHash = homeData.location
-                          ? homeData.location
-                              .split("")
-                              .reduce(
-                                (acc, char) => acc + char.charCodeAt(0),
-                                0
-                              )
-                          : 0;
-
-                        const hotspot1Row = locationHash % 5;
-                        const hotspot1Col = (locationHash + 2) % 5;
-                        const hotspot2Row = (locationHash + 1) % 5;
-                        const hotspot2Col = (locationHash + 3) % 5;
-
-                        const distToHotspot1 = Math.sqrt(
-                          Math.pow(row - hotspot1Row, 2) +
-                            Math.pow(col - hotspot1Col, 2)
-                        );
-                        const distToHotspot2 = Math.sqrt(
-                          Math.pow(row - hotspot2Row, 2) +
-                            Math.pow(col - hotspot2Col, 2)
-                        );
-
-                        const minDist = Math.min(
-                          distToHotspot1,
-                          distToHotspot2
-                        );
-                        const baseIntensity = Math.max(0, 1 - minDist / 3);
-
-                        // Add some randomness
-                        const random = Math.sin(i * locationHash) * 0.15;
-                        const intensity = Math.min(
-                          1,
-                          Math.max(0, baseIntensity + random)
-                        );
-
-                        const opacity = intensity.toFixed(1);
-
-                        return (
-                          <div
-                            key={i}
-                            className="w-full h-8 rounded"
-                            style={{
-                              backgroundColor: `rgba(59, 130, 246, ${opacity})`,
-                              transition: "all 0.3s ease",
-                            }}></div>
-                        );
-                      })}
-                    </div>
-                    <p className="mt-2 text-xs text-gray-500">
-                      Crime density in neighborhood
-                    </p>
-                  </div>
-                  <div className="mt-3 flex justify-between text-xs text-gray-500">
-                    <span>Lower Crime</span>
-                    <div className="flex items-center">
-                      <div className="w-16 h-2 bg-gradient-to-r from-blue-100 to-blue-600 rounded"></div>
-                    </div>
-                    <span>Higher Crime</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* NEW TRANSPORTATION SECTION */}
+          {/* TRANSPORTATION SECTION - Modified to use OpenStreetMap */}
           <div className="mb-8">
             <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
               <FaRoute className="mr-2 text-indigo-600" />
@@ -556,39 +392,40 @@ const Info = () => {
                   </div>
                 </div>
 
-                {/* Google Maps - THE FIX IS HERE: Added position-relative to the container */}
+                {/* OpenStreetMap integration - replaced Google Maps */}
                 <div className="flex-1 min-h-64 border rounded-lg overflow-hidden shadow-sm relative">
                   <div className="bg-indigo-600 text-white p-3 flex items-center">
                     <FaMapMarkedAlt className="mr-2" />
                     <h3 className="font-medium">Location Map</h3>
                   </div>
 
-                  {/* Google Maps iframe */}
+                  {/* OpenStreetMap iframe */}
                   <div className="h-64 bg-gray-100 relative">
                     <iframe
                       title="Property Location"
                       width="100%"
                       height="100%"
-                      frameBorder="0"
                       style={{ border: 0 }}
-                      src={`https://www.google.com/maps/embed/v1/place?key=YOUR_API_KEY_HERE&q=${encodeURIComponent(
-                        transportData.location.address
-                      )}&center=${transportData.location.lat},${
+                      src={`https://www.openstreetmap.org/export/embed.html?bbox=${
+                        transportData.location.lng - 0.01
+                      }%2C${transportData.location.lat - 0.01}%2C${
+                        transportData.location.lng + 0.01
+                      }%2C${
+                        transportData.location.lat + 0.01
+                      }&layer=mapnik&marker=${transportData.location.lat}%2C${
                         transportData.location.lng
-                      }&zoom=15`}
+                      }`}
                       allowFullScreen></iframe>
 
-                    {/* Note: In a real application, you would replace YOUR_API_KEY_HERE with an actual Google Maps API key */}
-
-                    {/* Fallback placeholder in case the iframe doesn't load - now properly contained */}
-                    <div className="absolute inset-0 flex items-center justify-center bg-gray-100 bg-opacity-80">
-                      <div className="text-center p-4">
-                        <FaMapMarkedAlt className="text-indigo-500 text-4xl mx-auto mb-2" />
-                        <p className="text-gray-700">Interactive map view</p>
-                        <p className="text-sm text-gray-500 mt-1">
-                          Located at: {transportData.location.address}
-                        </p>
-                      </div>
+                    {/* Link to the full OpenStreetMap */}
+                    <div className="absolute bottom-0 left-0 right-0 bg-white bg-opacity-90 p-2 text-center text-xs">
+                      <a
+                        href={`https://www.openstreetmap.org/?mlat=${transportData.location.lat}&mlon=${transportData.location.lng}#map=16/${transportData.location.lat}/${transportData.location.lng}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-indigo-600 hover:underline">
+                        View larger map
+                      </a>
                     </div>
                   </div>
                 </div>
@@ -613,7 +450,7 @@ const Info = () => {
             <h2 className="text-xl font-semibold text-gray-800 mb-4">
               What this place offers
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {/* <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                 <div className="bg-indigo-100 p-3 rounded-full mr-3">
                   <FaBed className="text-indigo-600" size={20} />
@@ -638,6 +475,30 @@ const Info = () => {
                 </div>
                 <p className="text-gray-700">Beautiful City View</p>
               </div>
+            </div> */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {(homeData.amenities[0]?.split(",") || []).map(
+                (amenityRaw, index) => {
+                  const amenity = amenityRaw.trim().toLowerCase();
+                  const Icon = amenityIcons[amenity] || DefaultIcon; // Get the corresponding icon
+                  return (
+                    <div
+                      key={index}
+                      className="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                      <div className="bg-indigo-100 p-3 rounded-full mr-3">
+                        {Icon ? (
+                          <Icon className="text-indigo-600 text-xl" />
+                        ) : (
+                          <span className="text-indigo-600 text-sm font-bold">
+                            {amenity.charAt(0).toUpperCase()}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-gray-700 capitalize">{amenity}</p>
+                    </div>
+                  );
+                }
+              )}
             </div>
           </div>
 
